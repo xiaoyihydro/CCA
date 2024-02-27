@@ -1,0 +1,58 @@
+setwd("C:/Users/user/Desktop")
+source("Biplot.R")
+setwd("C:/Users/user/Desktop")
+data <- read.table("spring_xy.txt",header=T)
+rownames(data) <- data[,1]
+data <- data[,-1]
+names(data)
+
+X <- as.matrix(data)[,13:63]
+Y <- as.matrix(data)[,5:12]
+n <- nrow(X)
+p <- ncol(X)
+q <- ncol(Y)
+Xs <- scale(X)
+Ys <- scale(Y)
+Sxy <- (cov(cbind(Xs,Ys)))[1:p,(p+1):(p+q)]
+Sxx <- cov(Xs) ; Syy <- cov(Ys)
+Exx <- eigen(Sxx) ; Eyy <- eigen(Syy)
+Sxx.sq <- Exx$vectors %*% diag(sqrt(Exx$values)) %*% t(Exx$vectors)
+
+dim(diag(sqrt(Exx$values)))
+
+Syy.sq <- Eyy$vectors %*% diag(sqrt(Eyy$values)) %*% t(Eyy$vectors)
+K <- solve(Sxx.sq) %*% Sxy %*% solve(Syy.sq)
+
+svd.K <- svd(K)
+A <- solve(Sxx.sq)%*%svd.K$u
+B <- solve(Syy.sq)%*%svd.K$v
+
+Rx <- (Xs%*%A%*%diag(svd.K$d))[,1:2]
+Cx <- (A%*%diag(svd.K$d))[,1:2]
+Ry <- (Ys%*%B%*%diag(svd.K$d))[,1:2]
+Cy <- (B%*%diag(svd.K$d) )[,1:2]
+rownames(Cx) <- colnames(X)
+rownames(Cy) <- colnames(Y)
+
+eig <- (svd.K$d)^2 
+per <- eig/sum(eig)*100
+gof <- sum(per[1:2])
+
+
+
+setwd("C:/Users/user/Desktop")
+data <- read.table("spring_xy.txt",header=T)
+rownames(data) <- data[,1]
+data <- data[,-1]
+
+X <- as.matrix(data)[,42:43]
+Y <- as.matrix(data)[,5:12]
+coor <- CCplot(X,Y,std=1) ;coor
+x11()
+plot.2d(coor$Rx,coor$Cx)
+plot.2d(coor$Rx,coor$Cx,o.lab=F)
+
+x11()
+plot.2d(coor$Ry,coor$Cy,o.lab=F)
+x11()
+plot.2d(VAR=rbind(coor$Cx,coor$Cy))
